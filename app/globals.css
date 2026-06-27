@@ -1,0 +1,87 @@
+/* Design tokens first, so the variables exist before anything references them. */
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+ * Base element styling — all driven by tokens.
+ * ------------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Headings inherit the bold-black look by default. */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: var(--color-foreground);
+    color: var(--color-background);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Small reusable utilities layered on top of tokens.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  /* Dark "pill" primary button — the signature CTA. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary
+           px-4 py-2 text-sm font-medium text-primary-foreground
+           transition-transform duration-150 hover:scale-[1.02] active:scale-[0.99];
+  }
+
+  /* Quiet secondary / ghost button. */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-pill px-3 py-2
+           text-sm font-medium text-foreground transition-colors
+           hover:bg-surface-2;
+  }
+
+  /* Hairline-bordered soft card. */
+  .card {
+    @apply rounded-lg border border-border bg-surface;
+  }
+
+  /* Thin custom scrollbar for the chat / file panes. */
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 9999px;
+  }
+}
+
+/* Reveal-on-scroll helper (Base44-style). Elements start hidden and transition
+ * to a fully-visible end-state when .is-visible is toggled by an
+ * IntersectionObserver. Using a transition (not a keyframe animation) means the
+ * resting state is always opacity:1 — content never gets stuck hidden, even
+ * under prefers-reduced-motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+  }
+}

@@ -1,0 +1,91 @@
+/* =============================================================================
+ * DESIGN TOKENS — single source of truth for the whole product.
+ * =============================================================================
+ *
+ * This is a placeholder ("Concept") demo with NO brand identity yet, so every
+ * color / radius / spacing / font value the UI uses is declared here as a CSS
+ * custom property. Components reference these tokens ONLY (via Tailwind utility
+ * classes mapped in tailwind.config.ts) — nothing hardcodes a hex value.
+ *
+ * TO RE-THEME THE ENTIRE APP: edit the values in this file. That's it.
+ *   - Want a different brand color? Change --color-accent.
+ *   - Want a softer look? Bump the --radius-* values.
+ *   - Want a dark product? Swap the --color-* light values.
+ *
+ * The font family comes from next/font (Inter) which injects --font-inter;
+ * we alias it to --font-sans below so swapping the typeface is also one line.
+ * ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------------------
+   * COLOR — light, minimal base. Black headings, muted-gray subtext, soft
+   * cards, dark "pill" primary buttons. The Resources dropdown is the single
+   * dark surface (see the "DARK" group further down).
+   * ------------------------------------------------------------------------- */
+
+  /* Page + surfaces */
+  --color-background: #ffffff;   /* app/page background */
+  --color-surface: #ffffff;      /* cards, panels */
+  --color-surface-2: #f6f6f7;    /* inputs, hovers, subtle fills */
+  --color-foreground: #0b0b0c;   /* primary text / black bold headings */
+  --color-muted: #6b6f76;        /* muted-gray subtext */
+  --color-muted-2: #9aa0a6;      /* even lighter / placeholder text */
+  --color-border: #ececed;       /* hairline borders on cards/inputs */
+  --color-overlay: rgba(11, 11, 12, 0.45); /* modal backdrop scrim */
+
+  /* Primary action — the dark "pill" button */
+  --color-primary: #0b0b0c;
+  --color-primary-foreground: #ffffff;
+
+  /* Accent — placeholder highlight (promo pill CTA in the dropdown, etc.).
+   * Intentionally a swappable warm amber; replace when a brand color exists. */
+  --color-accent: #f5a524;
+  --color-accent-foreground: #0b0b0c;
+
+  /* Danger — used for graceful in-chat error states on the compose screen. */
+  --color-danger: #b42318;          /* error text */
+  --color-danger-surface: #fef3f2;  /* error message background */
+  --color-danger-border: #fecdc9;   /* error message border */
+
+  /* DARK surfaces — used ONLY by the Resources mega-dropdown (Image 4 style). */
+  --color-dark-surface: #141414;    /* dropdown panel background */
+  --color-dark-surface-2: #242427;  /* icon squares / promo card / hovers */
+  --color-dark-foreground: #f4f4f5; /* dropdown titles */
+  --color-dark-muted: #9a9aa0;      /* dropdown subtitles (gray) */
+  --color-dark-border: #2a2a2e;     /* hairlines inside the dropdown */
+
+  /* ---------------------------------------------------------------------------
+   * RADII — soft, rounded everything. Bump these up for a rounder feel.
+   * ------------------------------------------------------------------------- */
+  --radius-sm: 8px;
+  --radius: 12px;     /* default for inputs / small cards */
+  --radius-md: 14px;
+  --radius-lg: 18px;  /* large cards / hero prompt input */
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-pill: 9999px; /* pill buttons, tags */
+
+  /* ---------------------------------------------------------------------------
+   * SPACING — layout rhythm tokens. Tailwind's numeric scale handles most
+   * micro-spacing; these are the app-level structural measurements.
+   * ------------------------------------------------------------------------- */
+  --page-max: 1180px;     /* max content width for nav + landing sections */
+  --nav-height: 64px;     /* top navbar height */
+  --sidebar-width: 232px; /* dashboard / compose left sidebar */
+  --gutter: 24px;         /* default horizontal page gutter */
+  --section-y: 96px;      /* vertical padding between landing sections */
+
+  /* ---------------------------------------------------------------------------
+   * ELEVATION — keep shadows subtle on light, soft cards.
+   * ------------------------------------------------------------------------- */
+  --shadow-card: 0 1px 2px rgba(11, 11, 12, 0.04),
+                 0 8px 24px rgba(11, 11, 12, 0.05);
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.28); /* dark dropdown elevation */
+
+  /* ---------------------------------------------------------------------------
+   * TYPOGRAPHY — Inter via next/font (--font-inter), aliased here so the
+   * typeface can be swapped in one place.
+   * ------------------------------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
