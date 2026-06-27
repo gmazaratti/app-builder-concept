@@ -218,3 +218,62 @@ export const Devices = (p: IconProps) => (
     <rect x="17" y="9" width="4" height="11" rx="1.2" />
   </svg>
 );
+
+export const Check = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M5 12.5l4.5 4.5L19 6.5" />
+  </svg>
+);
+
+export const CreditCard = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="M3 10h18M7 15h4" />
+  </svg>
+);
+
+export const Settings = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2.5l1.6 2.3 2.7-.6.3 2.8 2.5 1.2-1.2 2.5 1.2 2.5-2.5 1.2-.3 2.8-2.7-.6L12 21.5l-1.6-2.3-2.7.6-.3-2.8-2.5-1.2 1.2-2.5L4.9 11l2.5-1.2.3-2.8 2.7.6L12 2.5Z" />
+  </svg>
+);
+
+export const LogOut = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="M16 17l5-5-5-5M21 12H9" />
+  </svg>
+);
+
+export const Code = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />
+  </svg>
+);
+
+export const Eye = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+export const X = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+export const MessageSquare = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M21 11.5a7.5 7.5 0 0 1-10.9 6.7L4 20l1.8-5.1A7.5 7.5 0 1 1 21 11.5Z" />
+  </svg>
+);
+
+export const PanelRight = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M15 4v16" />
+  </svg>
+);
