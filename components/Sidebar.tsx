@@ -4,11 +4,13 @@
 // Reads the client project store, so the Projects list, "+ Create", the
 // right-click (or kebab) context menu, inline rename, and delete-with-warning
 // all work without a backend.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "./Logo";
 import ConfirmDialog from "./ConfirmDialog";
+import TutorialModal from "./TutorialModal";
+import FeedbackModal from "./FeedbackModal";
 import { currentUser } from "@/lib/user";
 import {
   useProjects,
@@ -22,12 +24,14 @@ import {
   Folder,
   GraduationCap,
   Megaphone,
-  Gift,
   ChevronDown,
   ArrowLeft,
   Pencil,
   Trash,
   MoreVertical,
+  CreditCard,
+  Settings,
+  LogOut,
 } from "./icons";
 
 type Menu = { x: number; y: number; id: string } | null;
@@ -52,12 +56,53 @@ function StaticNavItem({
   );
 }
 
+function UtilButton({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+    >
+      <Icon width={16} height={16} />
+      {label}
+    </button>
+  );
+}
+
 export default function Sidebar({ activeProjectId }: { activeProjectId?: string }) {
   const router = useRouter();
   const projects = useProjects();
   const [menu, setMenu] = useState<Menu>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close the profile menu on outside click / Escape.
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node))
+        setProfileOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setProfileOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [profileOpen]);
 
   // Close the context menu on any outside interaction.
   useEffect(() => {
@@ -207,23 +252,61 @@ export default function Sidebar({ activeProjectId }: { activeProjectId?: string 
 
       {/* Bottom utility links */}
       <div className="mt-3 flex flex-col gap-0.5">
-        <StaticNavItem icon={GraduationCap} label="Learn" />
-        <StaticNavItem icon={Megaphone} label="Feedback" />
-        <StaticNavItem icon={Gift} label="Free Credits" />
+        <UtilButton icon={GraduationCap} label="Tutorial" onClick={() => setTutorialOpen(true)} />
+        <UtilButton icon={Megaphone} label="Feedback" onClick={() => setFeedbackOpen(true)} />
       </div>
 
-      {/* User row */}
-      <div className="mt-3 flex items-center gap-2.5 rounded-md border border-border px-2.5 py-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold leading-none text-background">
-          {currentUser.fullName.charAt(0)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-medium text-foreground">
-            {currentUser.fullName}
+      {/* User row + profile menu */}
+      <div ref={profileRef} className="relative mt-3">
+        {profileOpen && (
+          <div className="absolute bottom-full left-0 right-0 mb-1.5 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-pop">
+            <Link
+              href="/billing"
+              onClick={() => setProfileOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-surface-2"
+            >
+              <CreditCard width={15} height={15} className="text-muted" />
+              Billing
+            </Link>
+            <button
+              type="button"
+              onClick={() => setProfileOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-surface-2"
+            >
+              <Settings width={15} height={15} className="text-muted" />
+              Settings
+            </button>
+            <div className="my-1 border-t border-border" />
+            <Link
+              href="/"
+              onClick={() => setProfileOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-surface-2"
+            >
+              <LogOut width={15} height={15} className="text-muted" />
+              Log out
+            </Link>
           </div>
-          <div className="truncate text-[11px] text-muted-2">{currentUser.email}</div>
-        </div>
-        <ChevronDown width={14} height={14} className="shrink-0 text-muted-2" />
+        )}
+        <button
+          type="button"
+          onClick={() => setProfileOpen((v) => !v)}
+          className="flex w-full items-center gap-2.5 rounded-md border border-border px-2.5 py-2 text-left transition-colors hover:bg-surface-2"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold leading-none text-background">
+            {currentUser.fullName.charAt(0)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-medium text-foreground">
+              {currentUser.fullName}
+            </div>
+            <div className="truncate text-[11px] text-muted-2">{currentUser.email}</div>
+          </div>
+          <ChevronDown
+            width={14}
+            height={14}
+            className={`shrink-0 text-muted-2 transition-transform ${profileOpen ? "rotate-180" : ""}`}
+          />
+        </button>
       </div>
 
       {/* Context menu */}
@@ -283,6 +366,10 @@ export default function Sidebar({ activeProjectId }: { activeProjectId?: string 
         onConfirm={confirmDelete}
         onCancel={() => setConfirmId(null)}
       />
+
+      {/* Tutorial + feedback modals */}
+      <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </aside>
   );
 }

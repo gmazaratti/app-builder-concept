@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 // Minimal modal confirmation. Used for the "delete project" warning.
 export default function ConfirmDialog({
@@ -32,9 +33,9 @@ export default function ConfirmDialog({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onCancel, onConfirm]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-overlay p-4"
       onMouseDown={onCancel}
@@ -64,6 +65,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
