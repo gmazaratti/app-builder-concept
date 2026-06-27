@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PhoneFrame from "@/components/PhoneFrame";
 import AppPreview from "@/components/AppPreview";
@@ -9,12 +10,12 @@ import FileTree from "@/components/FileTree";
 import CodeView from "@/components/CodeView";
 import ModelSizeSelector from "@/components/ModelSizeSelector";
 import DeviceSelector, { getDevice } from "@/components/DeviceSelector";
-import { ArrowRight, Image as ImageIcon, Phone, FileCode, Sparkle } from "@/components/icons";
+import { ArrowRight, Image as ImageIcon, Eye, Code, FileCode, Sparkle, PanelRight } from "@/components/icons";
 import type { ChatMessage, GeneratedApp, ModelSize } from "@/lib/types";
 import { INTRO_MESSAGE } from "@/lib/constants";
 import { getProject, updateProject, createProject } from "@/lib/projectStore";
 
-type Tab = "Preview" | "Files";
+type Stage = "preview" | "code";
 
 function defaultFile(app: GeneratedApp): string | null {
   const entry =
@@ -38,10 +39,11 @@ function ComposeInner() {
   const [modelSize, setModelSize] = useState<ModelSize>("Medium");
   const [loading, setLoading] = useState(false);
   const [app, setApp] = useState<GeneratedApp | undefined>(undefined);
-  const [tab, setTab] = useState<Tab>("Preview");
+  const [stage, setStage] = useState<Stage>("preview");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState("iphone15");
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(true);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
@@ -87,7 +89,7 @@ function ComposeInner() {
         ]);
         setApp(generated);
         setSelectedFile(defaultFile(generated));
-        setTab("Preview");
+        setStage("preview");
       } catch (err) {
         setMessages((prev) => [
           ...prev,
@@ -155,24 +157,157 @@ function ComposeInner() {
     app?.files.find((f) => f.path === selectedFile)?.contents ?? null;
   const device = getDevice(deviceId);
 
+  // Selecting a file in the explorer flips the stage to the code view.
+  const openFile = (path: string) => {
+    setSelectedFile(path);
+    setStage("code");
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar activeProjectId={projectId ?? undefined} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top breadcrumb bar */}
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-5 text-sm">
-          <span className="text-muted">Home</span>
-          <span className="text-muted-2">/</span>
-          <span className="text-muted">Projects</span>
-          <span className="text-muted-2">/</span>
-          <span className="font-medium text-foreground">Compose</span>
+        <header className="flex h-12 shrink-0 items-center justify-between border-b border-border px-5 text-sm">
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard" className="text-muted transition-colors hover:text-foreground">
+              Home
+            </Link>
+            <span className="text-muted-2">/</span>
+            <span className="text-muted">Projects</span>
+            <span className="text-muted-2">/</span>
+            <span className="font-medium text-foreground">Compose</span>
+          </div>
+
+          {/* Toggle the chat panel */}
+          <button
+            type="button"
+            onClick={() => setChatOpen((v) => !v)}
+            aria-pressed={chatOpen}
+            title={chatOpen ? "Hide chat" : "Show chat"}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors ${
+              chatOpen
+                ? "bg-surface-2 font-medium text-foreground"
+                : "text-muted hover:bg-surface-2 hover:text-foreground"
+            }`}
+          >
+            <PanelRight width={15} height={15} />
+            Chat
+          </button>
         </header>
 
+        {/*
+          Layout is deliberately a three-column "studio" — a persistent file
+          explorer (left), a centered Preview/Code stage, and the chat docked on
+          the right — rather than the conventional chat-left / preview-right split.
+        */}
         <div className="flex min-h-0 flex-1">
-          {/* LEFT — chat */}
-          <section className="flex w-[42%] min-w-[360px] max-w-[560px] flex-col border-r border-border">
-            <div ref={scrollRef} className="scroll-thin flex-1 overflow-y-auto px-5 py-5">
+          {/* LEFT — file explorer (always visible) */}
+          <aside className="flex w-52 shrink-0 flex-col border-r border-border bg-surface">
+            <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3.5 text-sm">
+              <FileCode width={14} height={14} className="text-muted-2" />
+              <span className="font-medium text-foreground">Files</span>
+              {app && <span className="ml-auto text-xs text-muted-2">{app.files.length}</span>}
+            </div>
+            <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
+              {app ? (
+                <FileTree files={app.files} selected={selectedFile} onSelect={openFile} />
+              ) : (
+                <p className="px-4 py-6 text-xs leading-relaxed text-muted-2">
+                  Files appear here once the agent builds your app.
+                </p>
+              )}
+            </div>
+          </aside>
+
+          {/* CENTER — Preview / Code stage */}
+          <section className="flex min-w-0 flex-1 flex-col">
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-3">
+              <div className="flex items-center gap-0.5 rounded-pill bg-surface-2 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setStage("preview")}
+                  className={`flex items-center gap-1.5 rounded-pill px-3 py-1 text-sm transition-colors ${
+                    stage === "preview"
+                      ? "bg-surface font-medium text-foreground shadow-card"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Eye width={14} height={14} />
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  disabled={!app}
+                  onClick={() => {
+                    if (!app) return;
+                    if (!selectedFile) setSelectedFile(defaultFile(app));
+                    setStage("code");
+                  }}
+                  className={`flex items-center gap-1.5 rounded-pill px-3 py-1 text-sm transition-colors disabled:opacity-40 ${
+                    stage === "code"
+                      ? "bg-surface font-medium text-foreground shadow-card"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Code width={14} height={14} />
+                  Code
+                </button>
+              </div>
+              {stage === "preview" && <DeviceSelector value={deviceId} onChange={setDeviceId} />}
+            </div>
+
+            <div className="min-h-0 flex-1">
+              {stage === "preview" ? (
+                <div className="flex h-full items-center justify-center overflow-auto bg-surface-2 p-6">
+                  <PhoneFrame
+                    width={device.w}
+                    height={device.h}
+                    radius={device.radius}
+                    notch={device.notch}
+                  >
+                    <AppPreview app={app} />
+                  </PhoneFrame>
+                </div>
+              ) : app && selectedFile ? (
+                <CodeView path={selectedFile} contents={selectedContents} />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted-2">
+                  <FileCode width={22} height={22} />
+                  <p className="max-w-[220px]">
+                    Generate an app, then pick a file to read its code.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* RIGHT — chat (collapsible, width-animated) */}
+          <section
+            className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out ${
+              chatOpen ? "w-[380px] border-l border-border" : "w-0"
+            }`}
+          >
+            {/* Fixed-width inner so content doesn't reflow while the panel animates */}
+            <div className="flex h-full w-[380px] flex-col">
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Sparkle width={14} height={14} className="text-muted-2" />
+                <span className="font-medium text-foreground">Chat</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChatOpen(false)}
+                aria-label="Collapse chat"
+                title="Hide chat"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-2 transition-colors hover:bg-surface-2 hover:text-foreground"
+              >
+                <PanelRight width={15} height={15} />
+              </button>
+            </div>
+
+            <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-5">
               <div className="flex flex-col gap-4">
                 {messages.map((m, i) => (
                   <MessageBubble key={i} message={m} />
@@ -181,7 +316,7 @@ function ComposeInner() {
               </div>
             </div>
 
-            {/* Input */}
+            {/* Composer */}
             <div className="shrink-0 border-t border-border p-3">
               <div className="card rounded-xl p-2">
                 <textarea
@@ -220,71 +355,7 @@ function ComposeInner() {
                 </div>
               </div>
             </div>
-          </section>
-
-          {/* RIGHT — preview / files */}
-          <section className="flex min-w-0 flex-1 flex-col">
-            {/* Tab bar */}
-            <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-3">
-              <div className="flex items-center gap-1">
-                {(["Preview", "Files"] as Tab[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTab(t)}
-                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors ${
-                      tab === t
-                        ? "bg-surface-2 font-medium text-foreground"
-                        : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    {t === "Preview" ? <Phone width={14} height={14} /> : <FileCode width={14} height={14} />}
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {tab === "Preview" && (
-                <DeviceSelector value={deviceId} onChange={setDeviceId} />
-              )}
             </div>
-
-            {/* Tab content */}
-            {tab === "Preview" ? (
-              <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-surface-2 p-6">
-                <PhoneFrame
-                  width={device.w}
-                  height={device.h}
-                  radius={device.radius}
-                  notch={device.notch}
-                >
-                  <AppPreview app={app} />
-                </PhoneFrame>
-              </div>
-            ) : (
-              <div className="flex min-h-0 flex-1">
-                {app ? (
-                  <>
-                    <div className="scroll-thin w-56 shrink-0 overflow-y-auto border-r border-border bg-surface">
-                      <FileTree
-                        files={app.files}
-                        selected={selectedFile}
-                        onSelect={setSelectedFile}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <CodeView path={selectedFile} contents={selectedContents} />
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center text-sm text-muted-2">
-                    <FileCode width={22} height={22} />
-                    <p className="max-w-[220px]">
-                      Your generated files will appear here once the agent builds your app.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
           </section>
         </div>
       </div>
