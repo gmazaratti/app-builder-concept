@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PhoneFrame from "@/components/PhoneFrame";
-import AppPreview from "@/components/AppPreview";
+import LivePreview from "@/components/LivePreview";
 import FileTree from "@/components/FileTree";
 import CodeView from "@/components/CodeView";
 import ModelSizeSelector from "@/components/ModelSizeSelector";
@@ -267,7 +267,16 @@ function ComposeInner() {
                     radius={device.radius}
                     notch={device.notch}
                   >
-                    <AppPreview app={app} />
+                    {app ? (
+                      <LivePreview files={app.files} />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-3 bg-surface px-6 text-center">
+                        <Eye width={24} height={24} className="text-muted-2" />
+                        <p className="text-sm text-muted-2">
+                          Describe an app and it&apos;ll run here, live.
+                        </p>
+                      </div>
+                    )}
                   </PhoneFrame>
                 </div>
               ) : app && selectedFile ? (

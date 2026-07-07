@@ -34,9 +34,9 @@ RULES FOR "files":
 - ALWAYS include these three:
     - "package.json"  (name reflects the app idea, expo + react + react-native deps)
     - "app.json"      (expo config; "expo.name" reflects the app idea)
-    - "App.tsx"       (the entry component)
+    - "App.tsx"       (the entry; MUST have a default export that is the root component)
 - Add a few focused files under "components/" or "screens/" only if they make the app clearer.
-- Use ONLY React Native core components (View, Text, ScrollView, Pressable, TextInput, FlatList, Image, StyleSheet, SafeAreaView) and Expo. Do NOT import third-party UI kits, navigation libraries, icon packs, or anything that needs native linking.
+- Import ONLY from 'react' and 'react-native'. Use React Native core components (View, Text, ScrollView, Pressable, TextInput, FlatList, Image, StyleSheet, SafeAreaView). Do NOT import expo modules (e.g. expo-status-bar), navigation libraries, icon packs, third-party UI kits, or anything that needs native linking — the app runs in a lightweight web preview that only supports react-native core.
 - Style with StyleSheet.create. Make the main screen genuinely reflect the user's idea (real labels, sensible mock data, a clean modern layout) — not a placeholder "Hello World".
 - Keep each file syntactically valid and self-contained. Use only relative imports between the files you emit.
 - Prefer functional components and hooks. Keep total code concise.
