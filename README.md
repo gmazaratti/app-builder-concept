@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Claude](https://img.shields.io/badge/Claude-Sonnet_4.6-D97757?logo=anthropic&logoColor=white)](https://www.anthropic.com)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-1C69FB?logo=googlegemini&logoColor=white)](https://ai.google.dev)
 
 [The problem](#-the-problem-idea-to-app) · [The solution](#-the-solution) · [Highlights](#-highlights) · [Tech stack](#-tech-stack) · [Getting started](#-getting-started) · [Architecture](#-architecture) · [Roadmap](#-roadmap)
 
@@ -21,7 +21,7 @@ _Appening is a placeholder name and an unbranded demo — not a finished product
 
 Appening is an AI agent that turns a sentence into a working mobile app. Describe what you want in plain English, and it generates a real Expo / React Native starter — screens, components, and project structure — that you can refine in chat, preview on a phone, and browse file-by-file. Real, editable code, not a black box.
 
-> **Project status.** This is a production-quality **front-end foundation** with **live AI generation already wired in**: every screen, interaction, and animation is real, and the compose screen calls the **Anthropic Messages API** server-side to generate apps. Projects persist in the browser today; the architecture is deliberately built so a real backend (auth, database, cloud projects) slots in behind one swappable module — no UI rewrites required. See [Architecture](#-architecture).
+> **Project status.** This is a production-quality **front-end foundation** with **live AI generation already wired in**: every screen, interaction, and animation is real, and the compose screen calls the **Google Gemini API** server-side to generate apps. Projects persist in the browser today; the architecture is deliberately built so a real backend (auth, database, cloud projects) slots in behind one swappable module — no UI rewrites required. See [Architecture](#-architecture).
 
 ## 🎯 The problem: idea to app
 
@@ -53,7 +53,7 @@ Things in here worth a closer look:
 
 | Feature | What's interesting |
 | --- | --- |
-| **Plain-English generation** | The compose screen POSTs the conversation to a server route that calls Claude (`claude-sonnet-4-6`) and returns a validated `{ summary, files }` contract. |
+| **Plain-English generation** | The compose screen POSTs the conversation to a server route that calls Gemini (`gemini-2.5-flash`) with a JSON response schema and returns a validated `{ summary, files }` contract. |
 | **Graceful by design** | Markdown fences are stripped, JSON is parsed inside a `try/catch`, and any failure surfaces as a calm in-chat error — never a crash. |
 | **Live multi-device preview** | A single `PhoneFrame` primitive renders any device profile; the selector reflows the same app across phone and tablet sizes. |
 | **Working file browser** | A real recursive tree (folders-first, expandable) plus a line-numbered code view of the generated output. |
@@ -70,15 +70,15 @@ Things in here worth a closer look:
 | **Language** | [TypeScript](https://www.typescriptlang.org) (strict mode) |
 | **Styling** | [Tailwind CSS 3](https://tailwindcss.com) wired entirely to CSS-variable design tokens |
 | **Font** | [Inter](https://rsms.me/inter/) via `next/font` |
-| **AI** | [Anthropic Messages API](https://docs.anthropic.com) — `claude-sonnet-4-6` |
+| **AI** | [Google Gemini API](https://ai.google.dev) — `gemini-2.5-flash` |
 | **State** | React + `localStorage` (no backend yet) |
 | **Deploy** | [Vercel](https://vercel.com) |
 
-> The generation route runs server-side, so your `ANTHROPIC_API_KEY` never reaches the client. Without a key the UI still runs end-to-end — generation just returns a friendly error, and the Demo Project remains fully explorable.
+> The generation route runs server-side, so your `GEMINI_API_KEY` never reaches the client. Without a key the UI still runs end-to-end — generation just returns a friendly error, and the Demo Project remains fully explorable.
 
 ## 🚀 Getting started
 
-**Prerequisites:** [Node.js](https://nodejs.org) 18+ and npm. An [Anthropic API key](https://console.anthropic.com) for live generation (optional — the Demo Project works without one).
+**Prerequisites:** [Node.js](https://nodejs.org) 18+ and npm. A [Google Gemini API key](https://aistudio.google.com/apikey) for live generation (optional — the Demo Project works without one).
 
 ```bash
 # 1. Clone
@@ -90,7 +90,7 @@ npm install
 
 # 3. Configure your key (optional)
 cp .env.example .env.local
-#    then edit .env.local and set ANTHROPIC_API_KEY=sk-ant-...
+#    then edit .env.local and set GEMINI_API_KEY=AIza...
 
 # 4. Run the dev server (http://localhost:3000)
 npm run dev
@@ -110,7 +110,7 @@ app/
 ├── page.tsx               # Landing
 ├── dashboard/page.tsx     # Project home
 ├── compose/page.tsx       # The builder — chat + preview + files
-├── api/generate/route.ts  # Server route → Anthropic Messages API
+├── api/generate/route.ts  # Server route → Google Gemini API
 ├── tokens.css             # ALL design tokens — reskin in one file
 ├── globals.css
 └── layout.tsx
@@ -127,7 +127,7 @@ lib/
 A few decisions that make the codebase pleasant to grow:
 
 - **Three surfaces, one shell.** Landing, dashboard, and compose share a tokenized design system and a single sidebar; compose is the one stateful, interactive surface where generation happens.
-- **Generation is a clean contract.** `compose → /api/generate → Claude → strip fences → parse → { summary, files }`. The UI only depends on that shape, so the model or prompt can change freely behind it.
+- **Generation is a clean contract.** `compose → /api/generate → Gemini (JSON schema) → parse → { summary, files }`. The UI only depends on that shape, so the model or prompt can change freely behind it.
 - **The prompt is a tunable file.** `lib/genSystemPrompt.ts` is treated like a skill — edit it to change what gets built, without touching route or UI code.
 - **Designed for a clean backend swap.** Projects flow through one module (`lib/projectStore.ts`). Replace its `localStorage` internals with a database + auth and every surface keeps working — no UI changes. This is the seam where Postgres and real accounts land.
 - **Themeable to the core.** Colors, radii, spacing, and the font are CSS custom properties in `app/tokens.css`, mapped into Tailwind; re-skinning or rebranding is a one-file change with no hardcoded brand values.
@@ -138,7 +138,7 @@ A few decisions that make the codebase pleasant to grow:
 The front end and live generation are real. The next phase deepens the loop:
 
 - [x] Landing, dashboard, and compose surfaces
-- [x] Live AI generation via the Anthropic Messages API
+- [x] Live AI generation via the Google Gemini API
 - [x] Multi-device live preview
 - [x] Working read-only file browser
 - [x] Local project persistence + a seeded Demo Project

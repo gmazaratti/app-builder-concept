@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { genSystemPrompt } from "@/lib/genSystemPrompt";
 import type { GeneratedFile, ModelSize } from "@/lib/types";
 
@@ -8,39 +7,58 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MODEL = "claude-sonnet-4-6";
+// Google Gemini model. Override with GEMINI_MODEL. 2.5 Flash is fast, capable,
+// and inexpensive; swap to gemini-2.5-pro for maximum quality.
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 // Model-size selector is cosmetic; we map it to an output-token budget so the
 // choice has a mild, sensible effect (bigger size → room for more files).
 const MAX_TOKENS: Record<ModelSize, number> = {
-  Low: 2048,
-  Medium: 4096,
-  High: 8000,
+  Low: 4096,
+  Medium: 8192,
+  High: 16384,
+};
+
+// Response schema so Gemini returns exactly our JSON contract. Gemini's REST
+// API expects UPPERCASE OpenAPI type names (OBJECT / STRING / ARRAY).
+const RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    summary: { type: "STRING" },
+    files: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          path: { type: "STRING" },
+          contents: { type: "STRING" },
+        },
+        required: ["path", "contents"],
+      },
+    },
+  },
+  required: ["summary", "files"],
 };
 
 type IncomingMessage = { role: "user" | "assistant"; content: string };
 
-/** Pull a JSON object out of the model's text, tolerating ``` fences / prose. */
+/** Pull a JSON object out of the model's text, tolerating stray prose/fences. */
 function extractJson(raw: string): string {
   let text = raw.trim();
-  // Strip a leading ```json / ``` fence and a trailing ``` if present.
   text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  // If there's still surrounding prose, grab the outermost { ... }.
   if (!text.startsWith("{")) {
     const first = text.indexOf("{");
     const last = text.lastIndexOf("}");
-    if (first !== -1 && last !== -1 && last > first) {
-      text = text.slice(first, last + 1);
-    }
+    if (first !== -1 && last !== -1 && last > first) text = text.slice(first, last + 1);
   }
   return text;
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not set. Add it to .env.local and restart the dev server." },
+      { error: "GEMINI_API_KEY is not set. Add it to .env.local and restart the dev server." },
       { status: 500 }
     );
   }
@@ -61,21 +79,64 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Describe the app you want to build first." }, { status: 400 });
   }
 
-  const client = new Anthropic({ apiKey });
+  // Gemini uses "user" / "model" roles.
+  const contents = messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const generationConfig: Record<string, unknown> = {
+    temperature: 0.7,
+    maxOutputTokens: MAX_TOKENS[modelSize] ?? 8192,
+    responseMimeType: "application/json",
+    responseSchema: RESPONSE_SCHEMA,
+  };
+  // 2.5 Flash "thinks" by default, which spends the output budget; disable it
+  // for fast, predictable structured output. (Only valid on 2.5 Flash models.)
+  if (/2\.5-flash/.test(MODEL)) {
+    generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
   // --- Call the model ---
   let rawText: string;
   try {
-    const resp = await client.messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS[modelSize] ?? 4096,
-      system: genSystemPrompt,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: genSystemPrompt }] },
+        contents,
+        generationConfig,
+      }),
     });
-    rawText = resp.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let message = `Gemini request failed (${res.status})`;
+      try {
+        message = JSON.parse(errText)?.error?.message || message;
+      } catch {
+        /* non-JSON error body */
+      }
+      return NextResponse.json({ error: `Model request failed: ${message}` }, { status: 502 });
+    }
+
+    const data = await res.json();
+    const candidate = data?.candidates?.[0];
+    rawText = (candidate?.content?.parts ?? [])
+      .map((p: { text?: string }) => p.text)
+      .filter(Boolean)
       .join("");
+
+    if (!rawText) {
+      const reason = candidate?.finishReason || data?.promptFeedback?.blockReason || "no content";
+      return NextResponse.json(
+        { error: `The model returned no output (${reason}). Try rephrasing your request.` },
+        { status: 502 }
+      );
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error calling the model.";
     return NextResponse.json({ error: `Model request failed: ${message}` }, { status: 502 });
@@ -101,7 +162,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ summary, files });
   } catch {
-    // Graceful failure — the chat pane shows this message.
     return NextResponse.json(
       { error: "The model didn't return valid app JSON. Try rephrasing your request." },
       { status: 422 }
