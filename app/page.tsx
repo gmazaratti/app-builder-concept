@@ -37,7 +37,7 @@ export default function LandingPage() {
           Get a real one back.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-balance text-lg text-muted">
-          Concept is an AI agent that turns a sentence into a working mobile app —
+          Appening is an AI agent that turns a sentence into a working mobile app —
           screens, code, and a live preview you can shape.
         </p>
 
@@ -97,7 +97,7 @@ export default function LandingPage() {
         >
           <Logo size={20} />
           <p className="text-xs text-muted-2">
-            Concept — a demo. Unbranded placeholder, themeable end to end.
+            Appening — a demo. Unbranded placeholder, themeable end to end.
           </p>
         </div>
       </footer>

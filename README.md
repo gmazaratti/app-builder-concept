@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨ Concept
+# ✨ Appening
 
 **Describe a mobile app in plain English — and get a real, editable starter back, with a live preview you can shape.**
 
@@ -13,13 +13,13 @@
 
 [The problem](#-the-problem-idea-to-app) · [The solution](#-the-solution) · [Highlights](#-highlights) · [Tech stack](#-tech-stack) · [Getting started](#-getting-started) · [Architecture](#-architecture) · [Roadmap](#-roadmap)
 
-_Concept is a placeholder name and an unbranded demo — not a finished product._
+_Appening is a placeholder name and an unbranded demo — not a finished product._
 
 </div>
 
 ---
 
-Concept is an AI agent that turns a sentence into a working mobile app. Describe what you want in plain English, and it generates a real Expo / React Native starter — screens, components, and project structure — that you can refine in chat, preview on a phone, and browse file-by-file. Real, editable code, not a black box.
+Appening is an AI agent that turns a sentence into a working mobile app. Describe what you want in plain English, and it generates a real Expo / React Native starter — screens, components, and project structure — that you can refine in chat, preview on a phone, and browse file-by-file. Real, editable code, not a black box.
 
 > **Project status.** This is a production-quality **front-end foundation** with **live AI generation already wired in**: every screen, interaction, and animation is real, and the compose screen calls the **Anthropic Messages API** server-side to generate apps. Projects persist in the browser today; the architecture is deliberately built so a real backend (auth, database, cloud projects) slots in behind one swappable module — no UI rewrites required. See [Architecture](#-architecture).
 
@@ -37,7 +37,7 @@ The result: the gap between a good idea and something runnable is wide enough th
 
 ## 💡 The solution
 
-Concept collapses _idea → starter app_ into a single conversation:
+Appening collapses _idea → starter app_ into a single conversation:
 
 - **Describe it, get real files.** A plain-English prompt becomes a complete Expo / React Native starter — `App.tsx`, screens, components, and config — generated as structured JSON, not a screenshot.
 - **Refine in chat.** Keep talking to the agent to reshape the app; each turn is a normal message, with a model-size selector for control.

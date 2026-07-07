@@ -48,7 +48,7 @@ const PLANS: Plan[] = [
     credits: "1,000 credits / mo",
     cta: "Get Studio",
     inherit: "Builder",
-    features: ["GitHub sync", "Shared workspaces", "Custom system prompts", "Remove Concept badge"],
+    features: ["GitHub sync", "Shared workspaces", "Custom system prompts", "Remove Appening badge"],
   },
 ];
 

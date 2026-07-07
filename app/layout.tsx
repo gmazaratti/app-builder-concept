@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Concept — describe an app, get an app",
+  title: "Appening — describe an app, get an app",
   description:
-    "Concept is an AI agent that turns a plain-English description into a working starter app.",
+    "Appening is an AI agent that turns a plain-English description into a working starter app.",
 };
 
 export default function RootLayout({

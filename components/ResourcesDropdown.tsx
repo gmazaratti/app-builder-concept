@@ -1,7 +1,7 @@
 // The Resources mega-dropdown.
 //
 // Light, on-theme styling (matches the rest of the surface — not a dark panel).
-// Content is specific to Concept (an AI mobile-app builder): ways to build
+// Content is specific to Appening (an AI mobile-app builder): ways to build
 // faster + ways to learn, plus a Pro promo. This is intentionally NOT a clone
 // of any reference site's menu.
 
@@ -44,7 +44,7 @@ const COLUMNS: DropColumn[] = [
 ];
 
 const PROMO = {
-  title: "Publish with Concept Pro",
+  title: "Publish with Appening Pro",
   body: "Take a generated app to the App Store and Play Store in a few clicks.",
   cta: "See Pro",
   href: "#",

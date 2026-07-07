@@ -2,7 +2,7 @@
  * DESIGN TOKENS — single source of truth for the whole product.
  * =============================================================================
  *
- * This is a placeholder ("Concept") demo with NO brand identity yet, so every
+ * This is a placeholder ("Appening") demo with NO brand identity yet, so every
  * color / radius / spacing / font value the UI uses is declared here as a CSS
  * custom property. Components reference these tokens ONLY (via Tailwind utility
  * classes mapped in tailwind.config.ts) — nothing hardcodes a hex value.

@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 import type { Project } from "./types";
 import { demoProject } from "./demoProject";
 
-const KEY = "concept.projects.v1";
+const KEY = "appening.projects.v1";
 
 let projects: Project[] = [];
 let initialized = false;

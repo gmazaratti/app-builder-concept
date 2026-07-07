@@ -1,5 +1,5 @@
 // Swappable wordmark — the ONE place the product's name + mark live.
-// Replace the <svg> mark and/or the word "Concept" here to rebrand everywhere.
+// Replace the <svg> mark and/or the word "Appening" here to rebrand everywhere.
 // Minimal treatment on purpose (cf. getmocha.com).
 
 type LogoProps = {
@@ -31,7 +31,7 @@ export default function Logo({ size = 22, markOnly = false, className = "" }: Lo
           className="font-semibold tracking-tight text-foreground"
           style={{ fontSize: size * 0.82 }}
         >
-          Concept
+          Appening
         </span>
       )}
     </span>

@@ -27,7 +27,7 @@ export default function Navbar() {
         style={{ maxWidth: "var(--page-max)", height: "var(--nav-height)" }}
       >
         {/* Left: logo */}
-        <Link href="/" className="flex items-center" aria-label="Concept home">
+        <Link href="/" className="flex items-center" aria-label="Appening home">
           <Logo />
         </Link>
 

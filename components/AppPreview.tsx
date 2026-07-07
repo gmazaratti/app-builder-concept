@@ -23,7 +23,7 @@ function jsonName(files: GeneratedApp["files"], match: RegExp, pick: (j: any) =>
 function deriveMeta(app?: GeneratedApp): { name: string; tagline: string } {
   if (!app) return { name: "Your App", tagline: "Describe an app to see it here." };
 
-  const tagline = app.summary.split(/[.\n]/)[0]?.trim() || "Built with Concept";
+  const tagline = app.summary.split(/[.\n]/)[0]?.trim() || "Built with Appening";
 
   // Prefer app.json's expo.name (usually properly cased), then package.json.
   const fromJson =
