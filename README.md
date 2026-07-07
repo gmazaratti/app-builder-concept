@@ -53,7 +53,7 @@ Things in here worth a closer look:
 
 | Feature | What's interesting |
 | --- | --- |
-| **Plain-English generation** | The compose screen POSTs the conversation to a server route that calls Gemini (`gemini-2.5-flash`) with a JSON response schema and returns a validated `{ summary, files }` contract. |
+| **Plain-English generation** | The compose screen POSTs the conversation to a server route that calls Gemini (Flash Lite by default, switchable to Flash or Pro from the in-app selector) with a JSON response schema, returning a validated `{ summary, files }` contract. |
 | **Graceful by design** | Markdown fences are stripped, JSON is parsed inside a `try/catch`, and any failure surfaces as a calm in-chat error — never a crash. |
 | **Live multi-device preview** | A single `PhoneFrame` primitive renders any device profile; the selector reflows the same app across phone and tablet sizes. |
 | **Working file browser** | A real recursive tree (folders-first, expandable) plus a line-numbered code view of the generated output. |
@@ -70,7 +70,7 @@ Things in here worth a closer look:
 | **Language** | [TypeScript](https://www.typescriptlang.org) (strict mode) |
 | **Styling** | [Tailwind CSS 3](https://tailwindcss.com) wired entirely to CSS-variable design tokens |
 | **Font** | [Inter](https://rsms.me/inter/) via `next/font` |
-| **AI** | [Google Gemini API](https://ai.google.dev) — `gemini-2.5-flash` |
+| **AI** | [Google Gemini API](https://ai.google.dev) — `gemini-2.5-flash-lite` / `flash` / `pro`, picked by an in-app model selector |
 | **State** | React + `localStorage` (no backend yet) |
 | **Deploy** | [Vercel](https://vercel.com) |
 

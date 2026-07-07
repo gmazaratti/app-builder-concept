@@ -36,7 +36,7 @@ function ComposeInner() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([INTRO_MESSAGE]);
   const [input, setInput] = useState("");
-  const [modelSize, setModelSize] = useState<ModelSize>("Medium");
+  const [modelSize, setModelSize] = useState<ModelSize>("Low");
   const [loading, setLoading] = useState(false);
   const [app, setApp] = useState<GeneratedApp | undefined>(undefined);
   const [stage, setStage] = useState<Stage>("preview");

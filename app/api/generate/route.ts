@@ -7,12 +7,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Google Gemini model. Override with GEMINI_MODEL. 2.5 Flash is fast, capable,
-// and inexpensive; swap to gemini-2.5-pro for maximum quality.
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+// The in-app selector (Flash Lite / Flash / Pro) maps to these Gemini models,
+// cheapest → highest quality. Setting GEMINI_MODEL pins one model globally and
+// overrides the selector.
+const MODEL_BY_SIZE: Record<ModelSize, string> = {
+  Low: "gemini-2.5-flash-lite", // cheapest + fastest
+  Medium: "gemini-2.5-flash", // balanced
+  High: "gemini-2.5-pro", // highest quality
+};
 
-// Model-size selector is cosmetic; we map it to an output-token budget so the
-// choice has a mild, sensible effect (bigger size → room for more files).
+// Output-token budget per tier.
 const MAX_TOKENS: Record<ModelSize, number> = {
   Low: 4096,
   Medium: 8192,
@@ -73,7 +77,8 @@ export async function POST(req: Request) {
   const messages = (body.messages ?? []).filter(
     (m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string"
   );
-  const modelSize: ModelSize = body.modelSize ?? "Medium";
+  const modelSize: ModelSize = body.modelSize ?? "Low";
+  const model = process.env.GEMINI_MODEL || MODEL_BY_SIZE[modelSize] || "gemini-2.5-flash-lite";
 
   if (messages.length === 0 || messages[messages.length - 1].role !== "user") {
     return NextResponse.json({ error: "Describe the app you want to build first." }, { status: 400 });
@@ -91,13 +96,13 @@ export async function POST(req: Request) {
     responseMimeType: "application/json",
     responseSchema: RESPONSE_SCHEMA,
   };
-  // 2.5 Flash "thinks" by default, which spends the output budget; disable it
-  // for fast, predictable structured output. (Only valid on 2.5 Flash models.)
-  if (/2\.5-flash/.test(MODEL)) {
+  // 2.5 Flash / Flash-Lite "think" by default, which spends the output budget;
+  // disable it for fast, predictable structured output. (Pro keeps thinking.)
+  if (/2\.5-flash/.test(model)) {
     generationConfig.thinkingConfig = { thinkingBudget: 0 };
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   // --- Call the model ---
   let rawText: string;
