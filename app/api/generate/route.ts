@@ -105,71 +105,86 @@ export async function POST(req: Request) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   // --- Call the model ---
-  let rawText: string;
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: genSystemPrompt }] },
-        contents,
-        generationConfig,
-      }),
-    });
+  const requestBody = JSON.stringify({
+    systemInstruction: { parts: [{ text: genSystemPrompt }] },
+    contents,
+    generationConfig,
+  });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      let message = `Gemini request failed (${res.status})`;
-      try {
-        message = JSON.parse(errText)?.error?.message || message;
-      } catch {
-        /* non-JSON error body */
+  // Retry once — the cheap models occasionally return empty or slightly
+  // malformed JSON, and a second attempt almost always succeeds.
+  let lastError = "The model didn't return valid app JSON. Try rephrasing your request.";
+  let lastStatus = 422;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    let rawText = "";
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: requestBody,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        let message = `Gemini request failed (${res.status})`;
+        try {
+          message = JSON.parse(errText)?.error?.message || message;
+        } catch {
+          /* non-JSON error body */
+        }
+        // 4xx (bad key / bad request) won't improve on retry — fail fast.
+        if (res.status < 500) {
+          return NextResponse.json({ error: `Model request failed: ${message}` }, { status: 502 });
+        }
+        lastError = `Model request failed: ${message}`;
+        lastStatus = 502;
+        continue;
       }
-      return NextResponse.json({ error: `Model request failed: ${message}` }, { status: 502 });
+
+      const data = await res.json();
+      const candidate = data?.candidates?.[0];
+      rawText = (candidate?.content?.parts ?? [])
+        .map((p: { text?: string }) => p.text)
+        .filter(Boolean)
+        .join("");
+
+      if (!rawText) {
+        const reason = candidate?.finishReason || data?.promptFeedback?.blockReason || "no content";
+        lastError = `The model returned no output (${reason}). Try rephrasing your request.`;
+        lastStatus = 502;
+        continue;
+      }
+    } catch (err) {
+      lastError = `Model request failed: ${err instanceof Error ? err.message : "unknown error"}`;
+      lastStatus = 502;
+      continue;
     }
 
-    const data = await res.json();
-    const candidate = data?.candidates?.[0];
-    rawText = (candidate?.content?.parts ?? [])
-      .map((p: { text?: string }) => p.text)
-      .filter(Boolean)
-      .join("");
+    // --- Parse + validate the JSON contract ---
+    try {
+      const parsed = JSON.parse(extractJson(rawText));
 
-    if (!rawText) {
-      const reason = candidate?.finishReason || data?.promptFeedback?.blockReason || "no content";
-      return NextResponse.json(
-        { error: `The model returned no output (${reason}). Try rephrasing your request.` },
-        { status: 502 }
-      );
+      const summary = typeof parsed.summary === "string" ? parsed.summary : null;
+      const files: GeneratedFile[] = Array.isArray(parsed.files)
+        ? parsed.files.filter(
+            (f: unknown): f is GeneratedFile =>
+              !!f &&
+              typeof (f as GeneratedFile).path === "string" &&
+              typeof (f as GeneratedFile).contents === "string"
+          )
+        : [];
+
+      if (!summary || files.length === 0) {
+        throw new Error("missing summary or files");
+      }
+
+      return NextResponse.json({ summary, files });
+    } catch {
+      lastError = "The model didn't return valid app JSON. Try rephrasing your request.";
+      lastStatus = 422;
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error calling the model.";
-    return NextResponse.json({ error: `Model request failed: ${message}` }, { status: 502 });
   }
 
-  // --- Parse + validate the JSON contract ---
-  try {
-    const parsed = JSON.parse(extractJson(rawText));
-
-    const summary = typeof parsed.summary === "string" ? parsed.summary : null;
-    const files: GeneratedFile[] = Array.isArray(parsed.files)
-      ? parsed.files.filter(
-          (f: unknown): f is GeneratedFile =>
-            !!f &&
-            typeof (f as GeneratedFile).path === "string" &&
-            typeof (f as GeneratedFile).contents === "string"
-        )
-      : [];
-
-    if (!summary || files.length === 0) {
-      throw new Error("missing summary or files");
-    }
-
-    return NextResponse.json({ summary, files });
-  } catch {
-    return NextResponse.json(
-      { error: "The model didn't return valid app JSON. Try rephrasing your request." },
-      { status: 422 }
-    );
-  }
+  return NextResponse.json({ error: lastError }, { status: lastStatus });
 }

@@ -103,6 +103,12 @@ npm run dev
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint over the project |
 
+## 🚀 Deploy to Vercel
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new) — Next.js is auto-detected.
+2. Add an environment variable **`GEMINI_API_KEY`** (Settings → Environment Variables). This is required for live generation and lives only in Vercel — it is **not** in the repo, so it never gets committed.
+3. Deploy. After that, every push to `main` auto-deploys. Changing an env var only takes effect on the **next** deploy, so redeploy after adding the key.
+
 ## 🗂 Project structure
 
 ```
